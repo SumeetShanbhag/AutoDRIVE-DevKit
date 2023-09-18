@@ -75,21 +75,36 @@ def bridge(sid, data):
         Implement perception stack here.
         '''
 
+        # Obstacle avoidance logic
+        min_distance = 1.0  # Set the minimum distance for obstacle avoidance
+        distance_to_obstacle = v_1.distance_to_nearest_obstacle()
+
+        if distance_to_obstacle < min_distance:
+            # Adjust steering to avoid the obstacle
+            v_1.steering_command += 0.2  # For example, steer to the right
+
+            # Make sure the steering command is within a valid range (-1 to 1)
+            v_1.steering_command = max(-1, min(v_1.steering_command, 1))
+            
         ########################################################################
         # PLANNING
         ########################################################################
         
-        # Advanced planner: Make turns according to lanes
-        current_lane = 0  # Example current lane
-        desired_lane = 0  # Example desired lane
-        lane_change_interval = 10  # Lane change interval in data_counter units
-
-        if data_counter % lane_change_interval == 0:
-            desired_lane = 0 if desired_lane == 1 else 1  # Toggle desired lane
-
-        # Calculate desired steering angle for lane keeping
+        # Basic planner: Collision avoidance and lane-following behavior
+        desired_lane = 0  # Stay in the center lane
         lane_center = desired_lane * 2.5  # Example lane center for each lane
         desired_steering = lane_center - v_1.position[1]  # Difference from lane center
+        
+        # Collision avoidance
+        min_distance = 2.0  # Minimum distance to maintain from obstacles
+        obstacle_detected = False
+
+        # Check if any obstacle is too close
+        if v_1.distance_to_nearest_obstacle() < min_distance:
+            obstacle_detected = True
+
+        if obstacle_detected:
+            desired_steering *= -1.0  # Steer away from the obstacle
         
         ########################################################################
         # CONTROL
@@ -107,7 +122,7 @@ def bridge(sid, data):
         steering_cmd = proportional + integral + derivative
 
         # Apply steering limits
-        steering_cmd = max(min(steering_cmd, 1.0), -1.0)
+        steering_cmd = max(min(steering_cmd, 0.5), -0.5)  # Adjust the steering limits
 
         # Set the computed steering command
         v_1.steering_command = steering_cmd
