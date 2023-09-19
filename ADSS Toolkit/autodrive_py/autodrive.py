@@ -34,8 +34,36 @@ class Vehicle:
         self.headlights_command = None
         self.indicators_command = None
 
+    # Method to calculate distance to nearest obstacle using LIDAR data
+    def distance_to_nearest_obstacle(self):
+        # Calculate the minimum distance from the LIDAR data
+        min_distance = np.min(self.lidar_range_array)
+        return min_distance
+
+    # Method for obstacle avoidance
+    def avoid_obstacle(self, min_distance):
+        distance_to_obstacle = self.distance_to_nearest_obstacle()
+
+        if distance_to_obstacle < min_distance:
+            # Get the index of the minimum distance in the LIDAR array
+            min_index = np.argmin(self.lidar_range_array)
+            
+            # If the obstacle is on the left, steer right, and vice versa
+            if min_index < len(self.lidar_range_array) / 2:
+                self.steering_command += 0.2
+            else:
+                self.steering_command -= 0.2
+
+            # Ensure the steering command is within a valid range (-1 to 1)
+            self.steering_command = max(-1, min(self.steering_command, 1))
+
+
     # Parse vehicle sensor data
     def parse_data(self, data, verbose=False):
+        
+        # Parse the steering command data
+        self.steering_command = data.get('steering', 0.0)  # Default to 0.0 if not provided        
+        
         # Actuator feedbacks
         self.throttle = float(data[self.id + " Throttle"])
         self.steering = float(data[self.id + " Steering"])
@@ -106,6 +134,25 @@ class Vehicle:
             else:
                 indicators_cmd_str = 'Invalid'
             print('Indicators Command: {}'.format(indicators_cmd_str))
+
+                # Perform obstacle avoidance
+        min_distance = 1.0  # Set the minimum distance for collision avoidance
+        self.avoid_obstacle(min_distance)
+
+        # Ensure that throttle and steering commands are within valid ranges
+        self.throttle_command = max(-1, min(self.throttle_command, 1))
+        self.steering_command = max(-1, min(self.steering_command, 1))
+
+        # if verbose:
+        #     # Print updated vehicle control command details
+        #     print('\n-------------------------------')
+        #     print('Updated Commands for Vehicle: ' + self.id)
+        #     print('-------------------------------\n')
+        #     print('Throttle Command: {}'.format(self.throttle_command))
+        #     print('Steering Command: {}'.format(self.steering_command))
+        #     print('Headlights Command: {}'.format(headlights_cmd_str))
+        #     print('Indicators Command: {}'.format(indicators_cmd_str))
+
         return {str(self.id) + ' Throttle': str(self.throttle_command), str(self.id) + ' Steering': str(self.steering_command), str(self.id) + ' Headlights': str(self.headlights_command), str(self.id) + ' Indicators': str(self.indicators_command)}
 
 ################################################################################
