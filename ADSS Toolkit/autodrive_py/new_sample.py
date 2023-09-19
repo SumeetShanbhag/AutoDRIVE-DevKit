@@ -71,12 +71,13 @@ def bridge(sid, data):
         tl_3.parse_data(data, verbose=True)
         tl_4.parse_data(data, verbose=True)
 
+        
         '''
         Implement perception stack here.
         '''
 
         # Obstacle avoidance logic
-        min_distance = 1.0  # Set the minimum distance for obstacle avoidance
+        min_distance = 0.5  # Set the minimum distance for obstacle avoidance
         distance_to_obstacle = v_1.distance_to_nearest_obstacle()
 
         if distance_to_obstacle < min_distance:
