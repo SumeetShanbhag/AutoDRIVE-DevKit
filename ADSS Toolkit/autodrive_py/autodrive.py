@@ -6,7 +6,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import cv2
-
+import time
 ################################################################################
 
 # Vehicle class
@@ -44,18 +44,25 @@ class Vehicle:
     def avoid_obstacle(self, min_distance):
         distance_to_obstacle = self.distance_to_nearest_obstacle()
 
+        # Dynamic braking: If an obstacle is very close, stop the vehicle
+        if distance_to_obstacle < min_distance / 2:
+            self.throttle_command = 0
+            return
+
         if distance_to_obstacle < min_distance:
             # Get the index of the minimum distance in the LIDAR array
             min_index = np.argmin(self.lidar_range_array)
             
-            # If the obstacle is on the left, steer right, and vice versa
-            if min_index < len(self.lidar_range_array) / 2:
-                self.steering_command += 0.2
-            else:
-                self.steering_command -= 0.2
+            # Increase steering sensitivity: steer more aggressively
+            steering_adjustment = 0.5 if min_index < len(self.lidar_range_array) / 2 else -0.5
+            self.steering_command += steering_adjustment
 
             # Ensure the steering command is within a valid range (-1 to 1)
             self.steering_command = max(-1, min(self.steering_command, 1))
+
+            # Adaptive speed control: reduce speed in the presence of obstacles
+            self.throttle_command *= 0.5
+
 
 
     # Parse vehicle sensor data
@@ -136,7 +143,7 @@ class Vehicle:
             print('Indicators Command: {}'.format(indicators_cmd_str))
 
                 # Perform obstacle avoidance
-        min_distance = 1.0  # Set the minimum distance for collision avoidance
+        min_distance = 0.5 # Set the minimum distance for collision avoidance
         self.avoid_obstacle(min_distance)
 
         # Ensure that throttle and steering commands are within valid ranges
