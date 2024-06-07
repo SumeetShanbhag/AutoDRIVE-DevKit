@@ -53,3 +53,8 @@ Execute an example Python3 script employing the AutoDRIVE Python API.
 $ cd ~/autodrive_py
 $ python3 example.py
 ```
+## Updated Scripts 
+
+- Execute new_sample.py after running the AutoDRIVE Simulator. Compare and edit with the example.py script in the original folder.
+- Compare the autodrive.py script in this folder and the original folder and edit as per needed.
+- Thew multi-agent-example.py script exists for establishing connection with the multiagent simulator. 
